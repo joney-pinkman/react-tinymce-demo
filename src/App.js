@@ -1,5 +1,5 @@
 import "./App.css";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useImperativeHandle, forwardRef } from "react";
 import LinkDialog from "./LinkDialog";
 import tinymce from "tinymce/tinymce";
 import { EditorContext } from "./EditorContext";
@@ -61,10 +61,13 @@ function App({
   autoFocus = true,
   onChange,
   defaultValue = "",
-}) {
+}, ref) {
   const rootRef = useRef();
   const [editor, setEditor] = useState(null);
+  const htmlRef = useRef(defaultValue)
   const linkDialogRef = useRef();
+
+  
   useEffect(() => {
     tinymce
       .init({
@@ -96,7 +99,23 @@ function App({
             }
             insertImages(editor, files);
           });
+          editor.once('focus', () => {
+            editor.execCommand('mceSpellCheck')
+          })
 
+          
+
+          editor.on('click', () => editor.fire('contextmenu'))
+
+          editor.on('NodeChange change input compositionend setcontent', () => {
+            const newContent = editor.getContent()
+            if (htmlRef.current !== newContent) {
+              console.log(htmlRef.current, newContent)
+              htmlRef.current = newContent
+              onChange(newContent)
+            }
+            // editor.execCommand('mceSpellCheck')
+          })
         },
         setup: (editor) => {
           console.log("setup");
@@ -133,7 +152,7 @@ function App({
         },
 
         branding: false,
-        contextmenu: false,
+        contextmenu: 'spellchecker',
         custom_ui_selector: ".custom-inline-strong",
         elementpath: false,
         min_height: 300,
@@ -141,7 +160,7 @@ function App({
         icons: "",
         preview_styles: false,
         menubar: false,
-        toolbar: "spellchecker",
+        toolbar: false,
         placeholder: "this is a placeholder",
         resize: true,
         skin: false,
@@ -165,12 +184,38 @@ function App({
           // strikethrough: { inline: 'strike' },
         },
 
-        browser_spellcheck: true,
+        browser_spellcheck: false,
 
         block_unsupported_drop: false,
         images_reuse_filename: true,
         autoresize_bottom_margin: 0,
         object_resizing: "img",
+
+        spellchecker_on_load: true,
+        spellchecker_callback: (method, text, success, failure) => {
+          if (method === 'spellcheck') {
+            fetch('http://localhost:8000/spellchecker', {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json'
+              },
+              body: JSON.stringify({
+                texts: [text],
+                whitelist: []
+              })
+            }).then(res => res.json()).then(result => {
+              success(result)
+            }).catch(e => {
+              failure("Spellcheck error:" + e);
+            })
+            
+          } else {
+            failure('Unsupported spellcheck method');
+          }
+        },
+        spellchecker_rpc_url: 'http://localhost:8000/spellchecker',
+
+
       })
       .then((editors) => {
         console.log("init complete");
@@ -182,7 +227,9 @@ function App({
       editor && editor.destroy();
     };
   }, [editor]);
+
   return (
+    <div style={{ position: 'flex',  }}>
     <EditorContext.Provider value={editor}>
       {!!editor && (
         <>
@@ -209,7 +256,13 @@ function App({
       <div ref={rootRef} />
       {!!editor && <LinkDialog ref={linkDialogRef} />}
     </EditorContext.Provider>
+        <div>
+          <button onClick={() => {
+            console.log(editor.getContent())
+          }}>get Content</button>
+        </div>
+    </div>
   );
 }
 
-export default App;
+export default forwardRef(App);

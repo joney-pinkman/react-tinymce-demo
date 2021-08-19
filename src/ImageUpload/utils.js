@@ -78,7 +78,7 @@ function getBestFitSize({ width, height }) {
 }
 
 const LoadingImage = (id) => {
-  return `<p><img id=${id} src='https://assets.easilydo.com/onmail/photo-loading.png' width=100 height=100 /></p>`;
+  return `<div><img id=${id} src='https://assets.easilydo.com/onmail/photo-loading.png' width=100 height=100 /></div>`;
 };
 
 export const insertImages = (editor, files) => {
@@ -87,15 +87,18 @@ export const insertImages = (editor, files) => {
     const id = uuid();
     try {
       const placeholder = `${LoadingImage(id)}`;
-      editor.execCommand("mceInsertContent", false, {
-        content: placeholder,
-      });
+      editor.undoManager.ignore(() => {
+        editor.execCommand("mceInsertContent", false, {
+          content: placeholder,
+        });
+      })
+      
 
       const res = await image_upload_handler(file);
       const size = await getUploadImageSize(src);
 
       await new Promise((resolve) => {
-        setTimeout(resolve, 2000);
+        setTimeout(resolve, 200000);
       });
 
       const cid = res.id;

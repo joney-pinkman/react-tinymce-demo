@@ -8,7 +8,8 @@ import defaultValue from '!!raw-loader!./test.html'
 
 ReactDOM.render(
   <React.StrictMode>
-    <App defaultValue={defaultValue} />
+    <App defaultValue={defaultValue} onChange={() => console.log('change')} />
+
   </React.StrictMode>,
   document.getElementById('root')
 );
