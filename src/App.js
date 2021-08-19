@@ -99,9 +99,10 @@ function App({
             }
             insertImages(editor, files);
           });
-          editor.once('focus', () => {
+          
+          
             editor.execCommand('mceSpellCheck')
-          })
+          
 
           
 
@@ -114,8 +115,10 @@ function App({
               htmlRef.current = newContent
               onChange(newContent)
             }
+
             // editor.execCommand('mceSpellCheck')
           })
+          
         },
         setup: (editor) => {
           console.log("setup");

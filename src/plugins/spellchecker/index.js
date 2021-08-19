@@ -130,7 +130,7 @@ import DomTextMatcher from './DomTextMatcher';
     spellCheckCallback.call(editor.plugins.spellchecker, name, data, successCallback, errorCallback);
   };
   var spellcheck = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
-    console.log('spellcheck')
+    
     if (finish(editor, startedState, textMatcherState)) {
       return;
     }
@@ -145,7 +145,7 @@ import DomTextMatcher from './DomTextMatcher';
     var successCallback = function (data) {
       markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
     };
-    editor.setProgressState(true);
+    // editor.setProgressState(true);
     sendRpcCall(editor, pluginUrl, currentLanguageState, 'spellcheck', getTextMatcher(editor, textMatcherState).text, successCallback, errorCallback);
     editor.focus();
   };
@@ -217,7 +217,7 @@ import DomTextMatcher from './DomTextMatcher';
   };
   var markErrors = function (editor, startedState, textMatcherState, lastSuggestionsState, data) {
     var hasDictionarySupport = !!data.dictionary;
-    console.log(data)
+    
     var suggestions = data[0].corrections
     editor.setProgressState(false);
     if (isEmpty(suggestions)) {
@@ -235,20 +235,24 @@ import DomTextMatcher from './DomTextMatcher';
     });
     var bookmark = editor.selection.getBookmark();
     const matches = data[0].corrections.map(correction => {
-      const { origText, CorText, startIndex, endIndex } = correction
+      const { origText, CorText, startIndex, endIndex, type } = correction
       return {
         start: startIndex,
         end: endIndex,
         text: origText,
-        data: CorText
+        data: CorText,
+        type
       }
     })
     getTextMatcher(editor, textMatcherState).setMatches(matches).wrap(function (match) {
+      const index = matches.indexOf(match)
+
       return editor.dom.create('span', {
-        'class': 'mce-spellchecker-word',
+        'class': match.type === 1 ? 'mce-spellchecker-word' : 'mce-spellchecker-grammar',
         'aria-invalid': 'spelling',
         'data-mce-bogus': 1,
-        'data-mce-word': match.text
+        'data-mce-word': match.text,
+        'data-mce-spellcheck': index,
       });
     });
     editor.selection.moveToBookmark(bookmark);
@@ -372,9 +376,11 @@ import DomTextMatcher from './DomTextMatcher';
   };
 
   var ignoreAll = true;
-  var getSuggestions = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, word, spans) {
+  var getSuggestions = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, index, spans) {
     var items = [];
-    var suggestions = lastSuggestionsState.get().suggestions[word];
+    const word = lastSuggestionsState.get().suggestions[index].origText
+
+    var suggestions = [lastSuggestionsState.get().suggestions[index].CorText];
     global$1.each(suggestions, function (suggestion) {
       items.push({
         text: suggestion,
@@ -415,14 +421,14 @@ import DomTextMatcher from './DomTextMatcher';
   var setup = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState) {
     var update = function (element) {
       var target = element;
-      if (target.className === 'mce-spellchecker-word') {
+      if (target.className === 'mce-spellchecker-word' || target.className === 'mce-spellchecker-grammar') {
         var spans = findSpansByIndex(editor, getElmIndex(target));
         if (spans.length > 0) {
           var rng = editor.dom.createRng();
           rng.setStartBefore(spans[0]);
           rng.setEndAfter(spans[spans.length - 1]);
           editor.selection.setRng(rng);
-          return getSuggestions(editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, target.getAttribute('data-mce-word'), spans);
+          return getSuggestions(editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, +target.getAttribute('data-mce-spellcheck'), spans);
         }
       } else {
         return [];
