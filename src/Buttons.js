@@ -49,6 +49,42 @@ export function MarkButton({ type, children, value, onMouseDown, ...rest }) {
   );
 }
 
+
+export function UndoButton() {
+  const editor = useContext(EditorContext)
+  const [enabled, setEnabled] = useState(editor.undoManager.hasUndo())
+
+  useEffect(() => {
+    const handleUndo = () => {
+      setEnabled(editor.undoManager.hasUndo())
+      
+    }
+    editor.on('nodeChange', handleUndo)
+    return () => {
+      editor.off('nodeChange', handleUndo)
+    }
+  }, [])
+  return <button onClick={() => editor.undoManager.undo()} disabled={!enabled}>Undo</button>
+}
+
+
+export function RedoButton() {
+  const editor = useContext(EditorContext)
+  const [enabled, setEnabled] = useState(editor.undoManager.hasRedo())
+
+  useEffect(() => {
+    const handleUndo = () => {
+      setEnabled(editor.undoManager.hasRedo())
+      
+    }
+    editor.on('nodeChange', handleUndo)
+    return () => {
+      editor.off('nodeChange', handleUndo)
+    }
+  }, [])
+  return <button onClick={() => editor.undoManager.undo()} disabled={!enabled}>Redo</button>
+}
+
 export function BoldButton() {
   return <MarkButton type="bold">Bold</MarkButton>;
 }

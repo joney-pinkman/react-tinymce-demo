@@ -25,6 +25,8 @@ import {
   IndentLessButton,
   InsertLinkButton,
   InsertImageButton,
+  UndoButton,
+  RedoButton,
 } from "./Buttons";
 import { insertImages, loadInlineImage } from "./ImageUpload/utils";
 // importing the plugin js.
@@ -237,6 +239,8 @@ function App({
       {!!editor && (
         <>
           <div className="custom-inline-strong">
+            <UndoButton />
+            <RedoButton />
             <BoldButton />
             <ItalicButton />
             <UnderlineButton />
