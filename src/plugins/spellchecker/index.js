@@ -8,7 +8,10 @@
  */
  import tinymce from 'tinymce/tinymce'
 import DomTextMatcher from './DomTextMatcher';
+import getNewCorrections from './compare'
 
+let requestText = 0
+let promise = Promise.resolve()
   var Cell = function (initial) {
     var value = initial;
     var get = function () {
@@ -130,24 +133,28 @@ import DomTextMatcher from './DomTextMatcher';
     spellCheckCallback.call(editor.plugins.spellchecker, name, data, successCallback, errorCallback);
   };
   var spellcheck = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
+    return new Promise((resolve, reject) => {
+      if (finish(editor, startedState, textMatcherState)) {
+        return resolve();
+      }
+      var errorCallback = function (message) {
+        editor.notificationManager.open({
+          text: message,
+          type: 'error'
+        });
+        editor.setProgressState(false);
+        finish(editor, startedState, textMatcherState);
+        reject()
+      };
+      var successCallback = function (data) {
+        markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
+        resolve()
+      };
+      // editor.setProgressState(true);
+      sendRpcCall(editor, pluginUrl, currentLanguageState, 'spellcheck', getTextMatcher(editor, textMatcherState).text, successCallback, errorCallback);
+      editor.focus();
+    })
     
-    if (finish(editor, startedState, textMatcherState)) {
-      return;
-    }
-    var errorCallback = function (message) {
-      editor.notificationManager.open({
-        text: message,
-        type: 'error'
-      });
-      editor.setProgressState(false);
-      finish(editor, startedState, textMatcherState);
-    };
-    var successCallback = function (data) {
-      markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
-    };
-    // editor.setProgressState(true);
-    sendRpcCall(editor, pluginUrl, currentLanguageState, 'spellcheck', getTextMatcher(editor, textMatcherState).text, successCallback, errorCallback);
-    editor.focus();
   };
   var checkIfFinished = function (editor, startedState, textMatcherState) {
     if (!editor.dom.select('span.mce-spellchecker-word').length) {
@@ -234,7 +241,13 @@ import DomTextMatcher from './DomTextMatcher';
       hasDictionarySupport: hasDictionarySupport
     });
     var bookmark = editor.selection.getBookmark();
-    const matches = data[0].corrections.map(correction => {
+    const originalText = getTextMatcher(editor, textMatcherState).text
+    const currentTextMacher = DomTextMatcher(editor.getBody(), editor)
+    const currentText = currentTextMacher.text
+
+    const newCorrections = getNewCorrections(originalText, currentText, data[0].corrections)
+    
+    const matches = newCorrections.map(correction => {
       const { origText, CorText, startIndex, endIndex, type } = correction
       return {
         start: startIndex,
@@ -244,6 +257,9 @@ import DomTextMatcher from './DomTextMatcher';
         type
       }
     })
+
+    console.log(getTextMatcher(editor, textMatcherState).text, DomTextMatcher(editor.getBody(), editor).text)
+    
     getTextMatcher(editor, textMatcherState).setMatches(matches).wrap(function (match) {
       const index = matches.indexOf(match)
 
@@ -277,7 +293,19 @@ import DomTextMatcher from './DomTextMatcher';
 
   var register = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
     editor.addCommand('mceSpellCheck', function () {
-      spellcheck(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
+      
+      promise = promise.then(() => {
+        console.log('spell check')
+        
+      
+          return spellcheck(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
+        
+       
+      
+
+        
+      
+      })
     });
   };
 

@@ -1,5 +1,7 @@
 import "./App.css";
 import { useRef, useEffect, useState, useImperativeHandle, forwardRef } from "react";
+// import debounce from 'lodash.debounce'
+import throttle from 'lodash.throttle'
 import LinkDialog from "./LinkDialog";
 import tinymce from "tinymce/tinymce";
 import { EditorContext } from "./EditorContext";
@@ -113,13 +115,16 @@ function App({
           editor.on('NodeChange change input compositionend setcontent', () => {
             const newContent = editor.getContent()
             if (htmlRef.current !== newContent) {
-              console.log(htmlRef.current, newContent)
+            
               htmlRef.current = newContent
-              onChange(newContent)
+              onChange && onChange(newContent)
             }
 
-            // editor.execCommand('mceSpellCheck')
           })
+          editor.on('change input compositionend setcontent', throttle(() => {
+            editor.execCommand('mceSpellCheck')
+
+          }, 2000))
           
         },
         setup: (editor) => {
@@ -263,11 +268,7 @@ function App({
       <div ref={rootRef} />
       {!!editor && <LinkDialog ref={linkDialogRef} />}
     </EditorContext.Provider>
-        <div>
-          <button onClick={() => {
-            console.log(editor.getContent())
-          }}>get Content</button>
-        </div>
+     
     </div>
   );
 }
