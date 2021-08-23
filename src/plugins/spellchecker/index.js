@@ -228,11 +228,11 @@ let promise = Promise.resolve()
     var suggestions = data[0].corrections
     editor.setProgressState(false);
     if (isEmpty(suggestions)) {
-      var message = editor.translate('No misspellings found.');
-      editor.notificationManager.open({
-        text: message,
-        type: 'info'
-      });
+      // var message = editor.translate('No misspellings found.');
+      // editor.notificationManager.open({
+      //   text: message,
+      //   type: 'info'
+      // });
       startedState.set(false);
       return;
     }
@@ -258,8 +258,13 @@ let promise = Promise.resolve()
       }
     })
 
-    console.log(getTextMatcher(editor, textMatcherState).text, DomTextMatcher(editor.getBody(), editor).text)
-    
+    // console.log(getTextMatcher(editor, textMatcherState).text, DomTextMatcher(editor.getBody(), editor).text)
+    textMatcherState.set(currentTextMacher)
+    global$1.each(editor.dom.select('span.mce-spellchecker-word'), function (span) {
+      
+        editor.dom.remove(span, true);
+      
+    });
     getTextMatcher(editor, textMatcherState).setMatches(matches).wrap(function (match) {
       const index = matches.indexOf(match)
 
