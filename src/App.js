@@ -120,11 +120,31 @@ function App({
               onChange && onChange(newContent)
             }
 
+          
+
           })
-          editor.on('change input compositionend setcontent', throttle(() => {
+          editor.on('change input compositionend setcontent undo', throttle(() => {
             editor.execCommand('mceSpellCheck')
 
           }, 2000))
+
+          editor.on('input', () => {
+            if (editor.selection.isCollapsed()) {
+              
+              const parent = editor.dom.getParents(editor.selection.getNode()).find(item => {
+                return item.matches && item.matches('.mce-spellchecker-grammar, .mce-spellchecker-word')
+              })
+              if (parent) {
+                editor.dom.remove(parent, true)
+              }
+   
+             
+              // if (commonAncestorContainer.matches && commonAncestorContainer.matches('.mce-spellchecker-grammar, .mce-spellchecker-word')) {
+              //   editor.dom.remove(commonAncestorContainer, true);
+              // }
+
+            }
+          })
           
         },
         setup: (editor) => {

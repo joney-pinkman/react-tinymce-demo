@@ -27,6 +27,7 @@ const getNewCorrections = (originalText, text, corrections) => {
   if (originalText === text) return corrections
   
   const diff = getDiff(originalText, text)
+
   return diff.map(({ baseIndex, originalStartIndex, originalEndIndex, value, removed, added }) => {
     if (removed) return []
     return corrections.map(item => {
@@ -37,12 +38,13 @@ const getNewCorrections = (originalText, text, corrections) => {
           startIndex: baseIndex + startIndex,
           endIndex: endIndex + baseIndex
         }
-      } else return []
+      } else return null
   
     })
-  }).reduce((prev, curr) => [...prev, ...curr], []).filter(item => item.length)
+  }).reduce((prev, curr) => [...prev, ...curr], []).filter(Boolean)
 }
 
-export default getNewCorrections
+
+ export default getNewCorrections
 
 

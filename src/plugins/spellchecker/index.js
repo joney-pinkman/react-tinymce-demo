@@ -150,6 +150,8 @@ let promise = Promise.resolve()
         markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
         resolve()
       };
+     
+      
       // editor.setProgressState(true);
       sendRpcCall(editor, pluginUrl, currentLanguageState, 'spellcheck', getTextMatcher(editor, textMatcherState).text, successCallback, errorCallback);
       editor.focus();
@@ -189,15 +191,15 @@ let promise = Promise.resolve()
     checkIfFinished(editor, startedState, textMatcherState);
   };
   var finish = function (editor, startedState, textMatcherState) {
-    var bookmark = editor.selection.getBookmark();
-    getTextMatcher(editor, textMatcherState).reset();
-    editor.selection.moveToBookmark(bookmark);
-    textMatcherState.set(null);
-    if (startedState.get()) {
-      startedState.set(false);
-      fireSpellcheckEnd(editor);
-      return true;
-    }
+    // var bookmark = editor.selection.getBookmark();
+    // // getTextMatcher(editor, textMatcherState).reset();
+    // editor.selection.moveToBookmark(bookmark);
+    // textMatcherState.set(null);
+    // if (startedState.get()) {
+    //   startedState.set(false);
+    //   fireSpellcheckEnd(editor);
+    //   return true;
+    // }
   };
   var getElmIndex = function (elm) {
     var value = elm.getAttribute('data-mce-index');
@@ -258,13 +260,14 @@ let promise = Promise.resolve()
       }
     })
 
-    // console.log(getTextMatcher(editor, textMatcherState).text, DomTextMatcher(editor.getBody(), editor).text)
-    textMatcherState.set(currentTextMacher)
+    console.log(getTextMatcher(editor, textMatcherState).text, currentTextMacher.text,data[0].corrections,  newCorrections)
     global$1.each(editor.dom.select('span.mce-spellchecker-word'), function (span) {
       
         editor.dom.remove(span, true);
       
     });
+    textMatcherState.set(currentTextMacher)
+    
     getTextMatcher(editor, textMatcherState).setMatches(matches).wrap(function (match) {
       const index = matches.indexOf(match)
 
