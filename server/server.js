@@ -19,8 +19,8 @@ const csrfToken = '84b92b50-0167-4cd9-adc6-15f960c47169'
 app.post('/spellchecker', async (req, res) => {
   try {
     const loginResponse = await fetch('https://mail.onmail.com/v1/na/login', { headers: {
-      'x-Auth-Password': 'lxw314671488',
-      'x-Auth-User': 'xinwei@onmail.com'
+      'x-Auth-Password': '',
+      'x-Auth-User': ''
     } })
     const authToken = loginResponse.headers.get('x-Auth-Token')
 
@@ -38,7 +38,7 @@ app.post('/spellchecker', async (req, res) => {
       "sec-fetch-dest": "empty",
       "sec-fetch-mode": "cors",
       "sec-fetch-site": "same-site",
-      "x-auth-user": "xinwei@onmail.com",
+      "x-auth-user": "",
       "x-requested-with": "XMLHttpRequest"
     },
     "referrer": "https://mail.onmail.com/",
